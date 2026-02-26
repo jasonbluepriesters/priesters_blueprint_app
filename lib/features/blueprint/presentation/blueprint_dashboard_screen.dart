@@ -53,23 +53,42 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
 
     // Filters the view based on the selected chip
     final filteredBlueprints = _allBlueprints
-        .where((bp) => bp['facilityId'] == _selectedFacility || bp['facility_name'] == _selectedFacility)
+        .where((bp) => bp['facilityId'] == _selectedFacility)
         .toList();
 
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.grey[50],
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            title: const Text('Layout & Compliance'),
+            expandedHeight: 120.0,
             floating: true,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.brown[600],
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text('Layout & Compliance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      isDark ? const Color(0xFF2C2C2C) : Colors.brown[700]!,
+                      isDark ? const Color(0xFF1E1E1E) : Colors.brown[500]!,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.refresh),
+                icon: const Icon(Icons.refresh, color: Colors.white),
                 tooltip: 'Sync with Cloud',
                 onPressed: _loadBlueprints,
               ),
               IconButton(
-                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode, color: Colors.white),
                 onPressed: () {
                   ref.read(graphicsControllerProvider.notifier).setThemeMode(
                     isDark ? ThemeMode.light : ThemeMode.dark,
@@ -79,22 +98,16 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
               const SizedBox(width: 8),
             ],
           ),
+
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
               child: Wrap(
-                spacing: 8.0,
+                spacing: 12.0,
+                runSpacing: 12.0,
                 children: [
-                  ChoiceChip(
-                    label: const Text('Candy Kitchen'),
-                    selected: _selectedFacility == 'Candy Kitchen',
-                    onSelected: (s) { if(s) setState(() => _selectedFacility = 'Candy Kitchen'); },
-                  ),
-                  ChoiceChip(
-                    label: const Text('Shelling Plant'),
-                    selected: _selectedFacility == 'Shelling Plant',
-                    onSelected: (s) { if(s) setState(() => _selectedFacility = 'Shelling Plant'); },
-                  ),
+                  _buildFacilityChip('Candy Kitchen', isDark),
+                  _buildFacilityChip('Shelling Plant', isDark),
                 ],
               ),
             ),
@@ -103,7 +116,7 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
           if (_isLoading)
             const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
 
-          // Restored the nice Empty State message!
+          // --- THE RESTORED EMPTY STATE ---
           if (!_isLoading && filteredBlueprints.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -111,19 +124,29 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.architecture, size: 64, color: Colors.grey.shade400),
-                    const SizedBox(height: 16),
-                    Text('No blueprints saved for $_selectedFacility.',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[800] : Colors.brown[50],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.architecture, size: 64, color: isDark ? Colors.grey[400] : Colors.brown[300]),
+                    ),
+                    const SizedBox(height: 24),
+                    Text('No blueprints found for $_selectedFacility',
+                        style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[800], fontSize: 18, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 8),
+                    Text('Tap + to create a new floor plan',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                   ],
                 ),
               ),
             ),
 
-          // Restored the Grid Layout!
+          // --- THE RESTORED GRID UI ---
           if (!_isLoading && filteredBlueprints.isNotEmpty)
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.all(16.0),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 320.0,
@@ -137,14 +160,25 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
                     final id = bp['id'].toString();
                     final title = bp['name']?.toString() ?? 'Unnamed Layout';
 
+                    // Safely format the date
+                    final dateStr = bp['lastModified']?.toString() ?? '';
+                    String formattedDate = 'Recently modified';
+                    try {
+                      if (dateStr.isNotEmpty) {
+                        final date = DateTime.parse(dateStr);
+                        formattedDate = 'Edited ${date.month}/${date.day}/${date.year}';
+                      }
+                    } catch (_) {}
+
                     return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 4,
+                      shadowColor: Colors.black26,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      clipBehavior: Clip.antiAlias,
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
                         onTap: () async {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Syncing...'), duration: Duration(milliseconds: 500)),
+                            const SnackBar(content: Text('Preparing Workspace...'), duration: Duration(milliseconds: 500)),
                           );
                           await _repo.syncBlueprintToCloud(id);
                           if (context.mounted) {
@@ -167,19 +201,49 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.brown.withValues(alpha: 0.1),
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                  color: isDark ? Colors.grey[800] : Colors.brown[50],
                                 ),
-                                child: const Center(child: Icon(Icons.architecture, size: 48, color: Colors.brown)),
+                                child: Stack(
+                                  children: [
+                                    Center(child: Icon(Icons.architecture, size: 56, color: isDark ? Colors.grey[600] : Colors.brown[200])),
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.cloud_done, size: 12, color: Colors.green),
+                                            SizedBox(width: 4),
+                                            Text('Synced', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Text(
-                                title,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            Container(
+                              padding: const EdgeInsets.all(16.0),
+                              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(formattedDate, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                ],
                               ),
                             ),
                           ],
@@ -194,20 +258,21 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
         ],
       ),
 
+      // --- RESTORED FLOATING ACTION BUTTON ---
       floatingActionButton: FloatingActionButton.extended(
+        elevation: 4,
+        backgroundColor: Colors.brown[600],
+        foregroundColor: Colors.white,
         onPressed: () async {
           final newId = 'blueprint_${DateTime.now().millisecondsSinceEpoch}';
           const newName = 'New Layout';
 
-          // 1. Show a quick visual indicator
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preparing Workspace...'), duration: Duration(milliseconds: 500)),
+            const SnackBar(content: Text('Creating Blueprint...'), duration: Duration(milliseconds: 500)),
           );
 
-          // 2. Create the blank file in the database FIRST
           await _repo.createNewBlueprint(newId, newName, _selectedFacility);
 
-          // 3. THEN open the canvas
           if (context.mounted) {
             await Navigator.push(
               context,
@@ -219,14 +284,32 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
                 ),
               ),
             );
-
-            // Refresh the grid when you hit the back button!
             _loadBlueprints();
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('New Blueprint'),
+        label: const Text('New Blueprint', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
+    );
+  }
+
+  Widget _buildFacilityChip(String name, bool isDark) {
+    final isSelected = _selectedFacility == name;
+    return ChoiceChip(
+      label: Text(name, style: TextStyle(
+        color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      )),
+      selected: isSelected,
+      selectedColor: Colors.brown[600],
+      backgroundColor: isDark ? Colors.grey[800] : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      onSelected: (bool selected) {
+        if (selected) {
+          setState(() => _selectedFacility = name);
+        }
+      },
     );
   }
 }
