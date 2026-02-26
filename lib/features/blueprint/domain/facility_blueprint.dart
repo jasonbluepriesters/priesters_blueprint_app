@@ -34,8 +34,10 @@ class Blueprint {
 
     // An indestructible parsing engine with a safety net
     try {
-      if (map['layoutElements'] != null) {
-        dynamic elementsData = map['layoutElements'];
+      // Support both camelCase (SQLite) and snake_case (Supabase) keys
+      final elementsRaw = map['layoutElements'] ?? map['layout_elements'];
+      if (elementsRaw != null) {
+        dynamic elementsData = elementsRaw;
         List<dynamic> decodedList = [];
 
         // If the database gave us a raw String, safely decode it!
@@ -65,12 +67,15 @@ class Blueprint {
       print('CRITICAL PARSING ERROR: $e');
     }
 
+    final rawVersionNumber = map['versionNumber'] ?? map['version_number'];
+    final rawLastModified = map['lastModified'] ?? map['last_modified'];
+
     return Blueprint(
       id: map['id']?.toString() ?? '',
-      facilityId: map['facilityId']?.toString() ?? 'facility_1',
+      facilityId: (map['facilityId'] ?? map['facility_id'])?.toString() ?? 'facility_1',
       name: map['name']?.toString() ?? 'Untitled Layout',
-      versionNumber: map['versionNumber'] is int ? map['versionNumber'] : int.tryParse(map['versionNumber']?.toString() ?? '1') ?? 1,
-      lastModified: DateTime.tryParse(map['lastModified']?.toString() ?? '') ?? DateTime.now(),
+      versionNumber: rawVersionNumber is int ? rawVersionNumber : int.tryParse(rawVersionNumber?.toString() ?? '1') ?? 1,
+      lastModified: DateTime.tryParse(rawLastModified?.toString() ?? '') ?? DateTime.now(),
       layoutElements: parsedElements,
     );
   }
