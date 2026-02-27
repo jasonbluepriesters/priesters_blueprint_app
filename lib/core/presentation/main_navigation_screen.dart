@@ -7,6 +7,7 @@ import '/features/blueprint/presentation/canvas_workspace_screen.dart';
 class BlueprintDashboardScreen extends ConsumerStatefulWidget {
   const BlueprintDashboardScreen({super.key});
 
+
   @override
   ConsumerState<BlueprintDashboardScreen> createState() => _BlueprintDashboardScreenState();
 }
