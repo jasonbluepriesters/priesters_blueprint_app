@@ -24,7 +24,7 @@ final sharedPreferencesProvider = Provider<SharedPreferences>.internal(
 // ignore: unused_element
 typedef SharedPreferencesRef = ProviderRef<SharedPreferences>;
 String _$graphicsControllerHash() =>
-    r'f044046ec7cb817babffa30babc5e4b6a7c9b671';
+    r'91627a6ed7a9e14dde12f00b5840fcd438163907';
 
 /// See also [GraphicsController].
 @ProviderFor(GraphicsController)

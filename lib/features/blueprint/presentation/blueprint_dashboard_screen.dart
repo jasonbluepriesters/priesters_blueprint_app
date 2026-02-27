@@ -28,10 +28,7 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
     setState(() => _isLoading = true);
 
     try {
-      // 1. Pull latest from cloud
       await _repo.pullAllFromCloud();
-
-      // 2. Load from local DB
       final data = await _repo.exportAllBlueprintsRaw();
 
       if (mounted) {
@@ -51,7 +48,6 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system && MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-    // Filters the view based on the selected chip
     final filteredBlueprints = _allBlueprints
         .where((bp) => bp['facilityId'] == _selectedFacility)
         .toList();
@@ -61,23 +57,31 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 120.0,
+            // Removed expandedHeight to make it a standard size
             floating: true,
             pinned: true,
-            elevation: 0,
+            elevation: 4,
+            shadowColor: Colors.black45,
             backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.brown[600],
-            flexibleSpace: FlexibleSpaceBar(
-              title: const Text('Layout & Compliance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      isDark ? const Color(0xFF2C2C2C) : Colors.brown[700]!,
-                      isDark ? const Color(0xFF1E1E1E) : Colors.brown[500]!,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+            // Moved title out of the flexible space so it stays inline with actions
+            title: const Text(
+              'Layout & Compliance',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20.0,
+              ),
+            ),
+            // The gradient background
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    isDark ? const Color(0xFF2C2C2C) : Colors.brown[700]!,
+                    isDark ? const Color(0xFF1E1E1E) : Colors.brown[500]!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
             ),
@@ -101,7 +105,7 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
               child: Wrap(
                 spacing: 12.0,
                 runSpacing: 12.0,
@@ -116,7 +120,6 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
           if (_isLoading)
             const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
 
-          // --- THE RESTORED EMPTY STATE ---
           if (!_isLoading && filteredBlueprints.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -143,7 +146,6 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
               ),
             ),
 
-          // --- THE RESTORED GRID UI ---
           if (!_isLoading && filteredBlueprints.isNotEmpty)
             SliverPadding(
               padding: const EdgeInsets.all(16.0),
@@ -160,7 +162,6 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
                     final id = bp['id'].toString();
                     final title = bp['name']?.toString() ?? 'Unnamed Layout';
 
-                    // Safely format the date
                     final dateStr = bp['lastModified']?.toString() ?? '';
                     String formattedDate = 'Recently modified';
                     try {
@@ -258,7 +259,6 @@ class _BlueprintDashboardScreenState extends ConsumerState<BlueprintDashboardScr
         ],
       ),
 
-      // --- RESTORED FLOATING ACTION BUTTON ---
       floatingActionButton: FloatingActionButton.extended(
         elevation: 4,
         backgroundColor: Colors.brown[600],

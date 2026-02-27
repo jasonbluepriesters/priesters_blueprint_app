@@ -41,6 +41,8 @@ class GraphicsController extends _$GraphicsController {
     );
   }
 
+  // --- THE UI TOGGLE METHODS ---
+
   void setThemeMode(ThemeMode mode) {
     _prefs.setString('themeMode', mode.name);
     state = state.copyWith(themeMode: mode);
@@ -55,6 +57,18 @@ class GraphicsController extends _$GraphicsController {
     _prefs.setBool('highFidelityCanvas', isHighFidelity);
     state = state.copyWith(highFidelityCanvas: isHighFidelity);
   }
+
+  void toggleSnapToGrid(bool snap) {
+    _prefs.setBool('snapToGrid', snap);
+    state = state.copyWith(snapToGrid: snap);
+  }
+
+  void toggleLabels(bool show) {
+    _prefs.setBool('showLabels', show);
+    state = state.copyWith(showLabels: show);
+  }
+
+  // --- INTERNAL HELPER ---
 
   ThemeMode _loadThemeMode() {
     final savedMode = _prefs.getString('themeMode');
